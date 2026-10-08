@@ -1,0 +1,75 @@
+<div class="alert alert-danger" role="alert" *ngIf="loadError">
+  <div class="alert-items">
+    <div class="alert-item static">
+      <span class="alert-text">{{ loadError }}</span>
+    </div>
+  </div>
+</div>
+
+<button class="btn btn-primary" (click)="downloadExcel()">{{ 'reports.exportToExcel' | translate }}</button>
+
+<div class="card" style="margin-top: 20px;">
+  <div class="card-block filter-bar">
+    <div class="clr-form-control filter-search">
+      <div class="clr-control-container">
+        <input
+          type="text"
+          class="clr-input"
+          [placeholder]="'reports.filterPlaceholder' | translate"
+          [(ngModel)]="searchQuery"
+          name="searchQuery"
+        />
+      </div>
+    </div>
+    <div class="clr-form-control">
+      <div class="clr-control-container">
+        <select class="clr-select" [(ngModel)]="statusFilter" name="statusFilter">
+          <option value="ALL">{{ 'workOrders.allStatuses' | translate }}</option>
+          <option value="OK">OK</option>
+          <option value="DEFECT">DEFECT</option>
+          <option value="PENDING">PENDING</option>
+        </select>
+      </div>
+    </div>
+    <button
+      type="button"
+      class="btn btn-sm"
+      [class.btn-primary]="onlyMine"
+      [class.btn-outline]="!onlyMine"
+      (click)="onlyMine = !onlyMine"
+    >
+      {{ 'reports.onlyMine' | translate }}
+    </button>
+    <button type="button" class="btn btn-sm btn-link" (click)="clearFilters()">
+      {{ 'workOrders.clearFilters' | translate }}
+    </button>
+  </div>
+</div>
+
+<clr-datagrid>
+    <clr-dg-column [clrDgField]="'inspectionDate'">{{ 'reports.inspectionDate' | translate }}</clr-dg-column>
+    <clr-dg-column [clrDgField]="'fileName'">{{ 'reports.fileName' | translate }}</clr-dg-column>
+    <clr-dg-column [clrDgField]="'status'">{{ 'common.status' | translate }}</clr-dg-column>
+    <clr-dg-column [clrDgField]="'defectType'">{{ 'dashboard.defectType' | translate }}</clr-dg-column>
+    <clr-dg-column>{{ 'farmMap.confidence' | translate }}</clr-dg-column>
+    <clr-dg-column>{{ 'dashboard.estCost' | translate }}</clr-dg-column>
+    <clr-dg-column [clrDgField]="'uploadedBy'">{{ 'reports.uploadedBy' | translate }}</clr-dg-column>
+    <clr-dg-column>{{ 'reports.action' | translate }}</clr-dg-column>
+
+    <clr-dg-row *clrDgItems="let report of filteredReports">
+        <clr-dg-cell class="mono-cell">{{ report.inspectionDate }}</clr-dg-cell>
+        <clr-dg-cell class="id-cell">{{ report.fileName }}</clr-dg-cell>
+        <clr-dg-cell>
+            <span class="label" [ngClass]="{'label-danger': report.status === 'DEFECT', 'label-success': report.status === 'OK', 'label-warning': !report.status}">
+                {{ report.status || report.processingStatus || 'PENDING' }}
+            </span>
+        </clr-dg-cell>
+        <clr-dg-cell>{{ report.defectType || '-' }}</clr-dg-cell>
+        <clr-dg-cell class="mono-cell">{{ report.confidenceScore ? (report.confidenceScore * 100) + '%' : '-' }}</clr-dg-cell>
+        <clr-dg-cell class="mono-cell">{{ report.estimatedRepairCost | cost:report.costCurrency }}</clr-dg-cell>
+        <clr-dg-cell class="mono-cell">{{ report.uploadedBy || '-' }}</clr-dg-cell>
+        <clr-dg-cell><button class="btn btn-sm btn-link">{{ 'reports.viewImage' | translate }}</button></clr-dg-cell>
+    </clr-dg-row>
+
+    <clr-dg-footer>{{ filteredReports.length }} / {{ reportsList.length }} {{ 'reports.rowsShown' | translate }}</clr-dg-footer>
+</clr-datagrid>

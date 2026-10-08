@@ -1,0 +1,114 @@
+<h3>{{ 'dashboard.title' | translate }}</h3>
+<p>{{ 'dashboard.subtitle' | translate }}</p>
+
+<div class="alert alert-danger" role="alert" *ngIf="loadError">
+  <div class="alert-items">
+    <div class="alert-item static">
+      <span class="alert-text">{{ loadError }}</span>
+    </div>
+  </div>
+</div>
+
+<button class="btn btn-primary" (click)="downloadPdf()">{{ 'dashboard.downloadPdf' | translate }}</button>
+
+<div class="kpi-row" *ngIf="stats" style="margin-top: 1.25rem;">
+    <div class="kpi-card kpi-total">
+        <div class="kpi-label">{{ 'dashboard.totalInspections' | translate }}</div>
+        <div class="kpi-value">{{ stats.totalInspections }}</div>
+    </div>
+
+    <div class="kpi-card kpi-defects">
+        <div class="kpi-label">{{ 'dashboard.defectsFound' | translate }}</div>
+        <div class="kpi-value">{{ stats.defectsFound }}</div>
+    </div>
+
+    <div class="kpi-card kpi-healthy">
+        <div class="kpi-label">{{ 'dashboard.healthyPanels' | translate }}</div>
+        <div class="kpi-value">{{ stats.healthyPanels }}</div>
+    </div>
+
+    <div class="kpi-card kpi-cost">
+        <div class="kpi-label">{{ 'dashboard.estRepairCost' | translate }}</div>
+        <div class="kpi-value">{{ stats.totalEstimatedRepairCost | cost:stats.currency }}</div>
+    </div>
+</div>
+
+<div *ngIf="!stats && !loadError" style="margin-top: 20px;">
+    <span class="spinner spinner-md">{{ 'common.loading' | translate }}</span>
+</div>
+
+<div class="dash-grid" *ngIf="stats">
+  <div class="card dash-panel">
+    <div class="card-block">
+      <div class="card-title">{{ 'dashboard.healthBreakdown' | translate }}</div>
+      <div class="breakdown-row" *ngFor="let b of healthBuckets">
+        <div class="breakdown-label">{{ b.label }}</div>
+        <div class="breakdown-track">
+          <div class="breakdown-fill" [ngClass]="b.colorClass" [style.width.%]="b.pct"></div>
+        </div>
+        <div class="breakdown-count">{{ b.count }}</div>
+        <div class="breakdown-pct">{{ b.pct | number:'1.0-1' }}%</div>
+      </div>
+      <div *ngIf="healthBuckets.length === 0" class="empty-state">{{ 'dashboard.noPanelData' | translate }}</div>
+    </div>
+  </div>
+
+  <div class="card dash-panel">
+    <div class="card-block">
+      <div class="card-title">{{ 'dashboard.weeklyInspections' | translate }}</div>
+      <div class="weekly-row" *ngFor="let d of weeklyBuckets">
+        <div class="weekly-label">{{ d.label }}</div>
+        <div class="weekly-track">
+          <div class="weekly-fill" [style.width.%]="(d.count / maxWeeklyCount) * 100"></div>
+        </div>
+        <div class="weekly-count">{{ d.count }}</div>
+      </div>
+      <div *ngIf="weeklyBuckets.length === 0" class="empty-state">{{ 'dashboard.noRecentInspections' | translate }}</div>
+    </div>
+  </div>
+
+  <div class="card dash-panel">
+    <div class="card-block">
+      <div class="card-title">{{ 'dashboard.repairCostByDefect' | translate }}</div>
+      <div class="breakdown-row" *ngFor="let b of costBuckets">
+        <div class="breakdown-label cost-breakdown-label">{{ b.label }}</div>
+        <div class="breakdown-track">
+          <div class="breakdown-fill" [style.width.%]="b.pct" style="background: var(--accent-blue);"></div>
+        </div>
+        <div class="breakdown-count cost-breakdown-value">{{ b.cost | cost:stats.currency }}</div>
+      </div>
+      <div *ngIf="costBuckets.length === 0" class="empty-state">{{ 'dashboard.noRepairCosts' | translate }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card" *ngIf="stats">
+  <div class="card-block">
+    <div class="card-title">{{ 'dashboard.recentInspections' | translate }}</div>
+    <table class="table" *ngIf="recentInspections.length > 0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>{{ 'dashboard.panel' | translate }}</th>
+          <th>{{ 'common.date' | translate }}</th>
+          <th>{{ 'common.type' | translate }}</th>
+          <th>{{ 'common.status' | translate }}</th>
+          <th>{{ 'dashboard.defectType' | translate }}</th>
+          <th>{{ 'dashboard.estCost' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of recentInspections">
+          <td class="id-cell">INS-{{ r.id }}</td>
+          <td class="mono-cell">{{ r.panelRow != null ? '(' + r.panelRow + ', ' + r.panelColumn + ')' : '-' }}</td>
+          <td class="mono-cell">{{ r.inspectionDate }}</td>
+          <td>{{ r.inspectionType || '-' }}</td>
+          <td><span class="label" [ngClass]="'status-' + ((r.status || r.processingStatus || 'pending') | lowercase)">{{ r.status || r.processingStatus || 'PENDING' }}</span></td>
+          <td>{{ r.defectType || '-' }}</td>
+          <td class="mono-cell">{{ r.estimatedRepairCost | cost:r.costCurrency }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="recentInspections.length === 0" class="empty-state">{{ 'dashboard.noInspections' | translate }}</div>
+  </div>
+</div>

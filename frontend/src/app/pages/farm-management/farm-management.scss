@@ -1,0 +1,46 @@
+.page-container {
+  display: block;
+  padding: 1.5rem;
+}
+
+.farms-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.farms-list {
+  flex: 1;
+  max-width: 500px;
+}
+
+.new-farm-card {
+  max-width: 400px;
+}
+
+.new-farm-card .card-footer {
+  margin-top: 1rem;
+}
+
+.new-farm-card .btn {
+  margin-top: 0.5rem;
+}
+
+.farm-users {
+  flex: 1;
+  max-width: 500px;
+}
+
+tr {
+  cursor: pointer;
+}
+
+.selected-row {
+  background: rgba(230, 0, 122, 0.08);
+}
+
+.assign-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

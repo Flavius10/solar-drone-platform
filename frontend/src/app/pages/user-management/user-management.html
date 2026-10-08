@@ -1,0 +1,91 @@
+<div class="page-container">
+  <h2>{{ 'userManagement.title' | translate }}</h2>
+  <p>{{ 'userManagement.subtitle' | translate }}</p>
+
+  <div class="farms-layout">
+    <div class="farms-list">
+      <div class="card">
+        <div class="card-block">
+          <div class="card-title">{{ 'userManagement.existingUsers' | translate }}</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>{{ 'common.username' | translate }}</th>
+                <th>{{ 'common.role' | translate }}</th>
+                <th>{{ 'userManagement.tier' | translate }}</th>
+                <th>{{ 'common.email' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of users">
+                <td>{{ u.id }}</td>
+                <td>{{ u.username }}</td>
+                <td><span class="label" [ngClass]="'status-' + (u.role | lowercase)">{{ u.role }}</span></td>
+                <td>{{ u.subscriptionTier }}</td>
+                <td>{{ u.email || '-' }}</td>
+              </tr>
+              <tr *ngIf="!isLoadingUsers && users.length === 0">
+                <td colspan="5">{{ 'userManagement.noUsersFound' | translate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="farm-users">
+      <div class="card new-farm-card">
+        <div class="card-block">
+          <div class="card-title">{{ 'userManagement.createUser' | translate }}</div>
+
+          <form (ngSubmit)="onSubmit()" class="clr-form">
+            <div class="clr-form-control">
+              <label for="username" class="clr-control-label">{{ 'common.username' | translate }}</label>
+              <div class="clr-control-container">
+                <input type="text" id="username" name="username" class="clr-input" [(ngModel)]="username" autocomplete="off" />
+              </div>
+            </div>
+
+            <div class="clr-form-control">
+              <label for="password" class="clr-control-label">{{ 'userManagement.temporaryPassword' | translate }}</label>
+              <div class="clr-control-container">
+                <input type="password" id="password" name="password" class="clr-input" [(ngModel)]="password" autocomplete="new-password" />
+              </div>
+            </div>
+
+            <div class="clr-form-control">
+              <label for="role" class="clr-control-label">{{ 'common.role' | translate }}</label>
+              <div class="clr-control-container">
+                <select id="role" name="role" class="clr-select" [(ngModel)]="role">
+                  <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="clr-form-control">
+              <label for="subscriptionTier" class="clr-control-label">{{ 'userManagement.subscriptionTier' | translate }}</label>
+              <div class="clr-control-container">
+                <select id="subscriptionTier" name="subscriptionTier" class="clr-select" [(ngModel)]="subscriptionTier">
+                  <option *ngFor="let t of tiers" [value]="t">{{ t }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="alert" [ngClass]="isError ? 'alert-danger' : 'alert-success'" role="alert" *ngIf="message">
+              <div class="alert-items">
+                <div class="alert-item static">
+                  <span class="alert-text">{{ message }}</span>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+              {{ isLoading ? ('userManagement.creating' | translate) : ('userManagement.createUserButton' | translate) }}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

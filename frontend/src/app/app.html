@@ -1,0 +1,167 @@
+<div class="toast-container" *ngIf="toasts.length > 0">
+  <div class="toast-alert" *ngFor="let t of toasts">
+    <div class="toast-icon">⚠️</div>
+    <div class="toast-body">
+      <div class="toast-title">{{ 'toast.criticalDefect' | translate }}</div>
+      <div class="toast-message">{{ t.message }}</div>
+    </div>
+    <button class="toast-close" (click)="dismissToast(t)">×</button>
+  </div>
+</div>
+
+<clr-main-container>
+  <clr-header class="header-6" *ngIf="authService.isLoggedIn()">
+    <div class="header-left">
+      <div class="branding">
+        <a href="/dashboard" class="nav-link brand-link">
+          <svg class="brand-icon" width="26" height="26" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <clipPath id="brand-icon-clip"><rect width="100" height="100" rx="16"/></clipPath>
+              <linearGradient id="brand-icon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ff2d78"/>
+                <stop offset="100%" stop-color="#b026ff"/>
+              </linearGradient>
+            </defs>
+            
+            <rect width="100" height="100" rx="16" fill="#0b0710" stroke="#2a1830" stroke-width="0.6"/>
+            <g clip-path="url(#brand-icon-clip)">
+              <circle cx="50" cy="50" r="34" fill="none" stroke="url(#brand-icon-grad)" stroke-width="4"/>
+              <circle cx="50" cy="50" r="3.5" fill="url(#brand-icon-grad)"/>
+              <path d="M50 50 L50 12 A38 38 0 0 1 84 34 Z" fill="url(#brand-icon-grad)" opacity="0.55"/>
+              <line x1="50" y1="8" x2="50" y2="18" stroke="url(#brand-icon-grad)" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="76" cy="30" r="3" fill="#ff5ca8"/>
+            </g>
+          </svg>
+          <span class="title">axela<span class="title-accent">PLATFORM</span></span>
+        </a>
+      </div>
+      <div class="farm-switcher" *ngIf="farms.length > 0">
+        <span class="farm-switcher-icon">◎</span>
+        <select class="clr-select farm-select" [value]="selectedFarmId" (change)="onFarmChange($any($event.target).value)">
+          <option *ngFor="let f of farms" [value]="f.id">{{ f.name }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="header-search" *ngIf="selectedFarmId">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input
+        type="text"
+        class="header-search-input"
+        [placeholder]="'header.searchPlaceholder' | translate"
+        [(ngModel)]="searchQuery"
+        (input)="onSearchInput()"
+        (focus)="onSearchInput()"
+        (blur)="onSearchBlur()"
+      />
+      <div class="search-dropdown" *ngIf="showSearchResults">
+        <div class="search-dropdown-hint" *ngIf="searchIsSuggestion">
+          {{ 'header.searchHint' | translate }}
+          <span *ngIf="searchResults.length > 0"> &middot; {{ 'header.searchSuggested' | translate }}</span>
+        </div>
+        <div class="search-result" *ngFor="let p of searchResults" (click)="goToPanel(p)">
+          <span class="search-result-coords">({{ p.rowNumber }}, {{ p.columnNumber }})</span>
+          <span class="search-result-label" *ngIf="p.label">{{ p.label }}</span>
+          <span class="label search-result-status" [ngClass]="'status-' + (p.latestStatus | lowercase)">{{ p.latestStatus }}</span>
+        </div>
+        <div class="search-result search-result-empty" *ngIf="!searchIsSuggestion && searchQuery && searchResults.length === 0">{{ ('header.searchNoMatch' | translate).replace('{0}', searchQuery) }}</div>
+        <div class="search-result search-result-empty" *ngIf="searchIsSuggestion && searchResults.length === 0">{{ 'header.searchNoPanels' | translate }}</div>
+      </div>
+    </div>
+   <div class="settings">
+      <div class="lang-switcher">
+        <button class="lang-btn" [class.active]="translationService.lang === 'ro'" (click)="setLanguage('ro')" title="Romana">RO</button>
+        <button class="lang-btn" [class.active]="translationService.lang === 'en'" (click)="setLanguage('en')" title="English">EN</button>
+      </div>
+      <button class="theme-toggle-btn" (click)="toggleTheme()" [title]="themeService.theme === 'dark' ? 'Light mode' : 'Dark mode'">
+        <svg *ngIf="themeService.theme === 'dark'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg *ngIf="themeService.theme === 'light'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+      <div class="notification-bell-wrapper">
+        <a href="javascript:void(0)" class="nav-link icon-link" (click)="toggleNotifications()" [title]="'header.notifications' | translate">
+          <svg class="bell-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="badge badge-danger bell-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+        </a>
+        <div class="notification-backdrop" *ngIf="showNotifications" (click)="toggleNotifications()"></div>
+        <div class="notification-dropdown" *ngIf="showNotifications">
+          <div class="notification-dropdown-header">{{ 'header.notifications' | translate }}</div>
+          <div class="notification-list">
+            <div class="notification-item" *ngFor="let n of notifications" [class.unread]="!n.read" (click)="markAsRead(n)">
+              <div class="notification-row">
+                <div class="notification-message">{{ n.message }}</div>
+                <button class="notification-delete" (click)="deleteNotification(n, $event)" title="Delete">×</button>
+              </div>
+              <div class="notification-date">{{ n.createdAt | date:'short' }}</div>
+            </div>
+            <div class="notification-item notification-empty" *ngIf="notifications.length === 0">{{ 'header.noNotifications' | translate }}</div>
+          </div>
+        </div>
+      </div>
+      <a routerLink="/profile" class="nav-link user-link">
+        <span class="user-text">
+          <span class="user-name">{{ authService.getUsername() }}</span>
+          <span class="user-role">{{ authService.getRole() }}</span>
+        </span>
+        <span class="user-avatar">{{ authService.getUsername()?.charAt(0)?.toUpperCase() }}</span>
+      </a>
+      <a href="javascript:void(0)" class="nav-link" (click)="onLogout()">
+        <span class="nav-text">{{ 'header.logout' | translate }}</span>
+      </a>
+   </div>
+  </clr-header>
+
+  <div class="content-container" *ngIf="authService.isLoggedIn(); else loginOnly">
+    <clr-vertical-nav
+      [clrVerticalNavCollapsible]="true"
+      [clrVerticalNavCollapsed]="navCollapsed"
+      (clrVerticalNavCollapsedChange)="onNavCollapsedChange($event)"
+    >
+      <a clrVerticalNavLink routerLink="/dashboard" routerLinkActive="active">
+        <svg clrVerticalNavIcon class="side-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        {{ 'nav.dashboard' | translate }}
+      </a>
+      <a clrVerticalNavLink routerLink="/farm-map" routerLinkActive="active">
+        <svg clrVerticalNavIcon class="side-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+        {{ 'nav.farmMap' | translate }}
+      </a>
+      <a clrVerticalNavLink routerLink="/new-inspection" routerLinkActive="active" *ngIf="authService.getRole() !== 'VIEWER'">
+        <svg clrVerticalNavIcon class="side-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        {{ 'nav.newInspection' | translate }}
+      </a>
+      <a clrVerticalNavLink routerLink="/video-inspection" routerLinkActive="active" *ngIf="authService.getRole() !== 'VIEWER'">
+        <svg clrVerticalNavIcon class="side-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+        {{ 'nav.videoInspection' | translate }}
+      </a>
+      <a clrVerticalNavLink routerLink="/reports" routerLinkActive="active">
+        <svg clrVerticalNavIcon class="side-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        {{ 'nav.reports' | translate }}
+      </a>
+      <a clrVerticalNavLink routerLink="/work-orders" routerLinkActive="active">
+        <svg clrVerticalNavIcon class="side-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"></path></svg>
+        {{ 'nav.workOrders' | translate }}
+      </a>
+      <a clrVerticalNavLink routerLink="/audit-log" routerLinkActive="active" *ngIf="authService.getRole() === 'ADMIN'">
+        <svg clrVerticalNavIcon class="side-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        {{ 'nav.auditLog' | translate }}
+      </a>
+      <a clrVerticalNavLink routerLink="/user-management" routerLinkActive="active" *ngIf="authService.getRole() === 'ADMIN'">
+        <svg clrVerticalNavIcon class="side-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        {{ 'nav.userManagement' | translate }}
+      </a>
+      <a clrVerticalNavLink routerLink="/farm-management" routerLinkActive="active" *ngIf="authService.getRole() === 'ADMIN'">
+        <svg clrVerticalNavIcon class="side-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path><path d="M9 9v.01"></path><path d="M9 12v.01"></path><path d="M9 15v.01"></path><path d="M9 18v.01"></path></svg>
+        {{ 'nav.farmManagement' | translate }}
+      </a>
+    </clr-vertical-nav>
+
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+  <ng-template #loginOnly>
+    <router-outlet></router-outlet>
+  </ng-template>
+</clr-main-container>

@@ -1,0 +1,68 @@
+<div class="page-container">
+  <h2>{{ 'panelHistory.title' | translate }} <span *ngIf="panelId">— {{ 'panelHistory.panelHash' | translate }}{{ panelId }}</span></h2>
+
+  <a routerLink="/farm-map" class="btn btn-sm btn-outline back-link">← {{ 'panelHistory.backToFarmMap' | translate }}</a>
+
+  <div class="alert alert-danger" role="alert" *ngIf="errorMessage">
+    <div class="alert-items">
+      <div class="alert-item static">
+        <span class="alert-text">{{ errorMessage }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-cards" *ngIf="!isLoading && history.length > 0">
+    <div class="summary-card">
+      <div class="summary-value">{{ totalInspections }}</div>
+      <div class="summary-label">{{ 'panelHistory.inspections' | translate }}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-value">{{ totalDefects }}</div>
+      <div class="summary-label">{{ 'panelHistory.defectsFound' | translate }}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-value">{{ totalCost | cost:currency }}</div>
+      <div class="summary-label">{{ 'panelHistory.totalEstimatedRepairCost' | translate }}</div>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && history.length === 0 && !errorMessage" class="empty-state">
+    {{ 'panelHistory.noInspectionsYet' | translate }}
+  </div>
+
+  <div class="chart-scroll" *ngIf="!isLoading && history.length > 0">
+    <svg [attr.width]="chartWidth" [attr.height]="chartHeight">
+      
+      <text x="10" y="35" class="axis-label">{{ 'common.status' | translate }}</text>
+      <line x1="55" y1="40" [attr.x2]="chartWidth - 20" y2="40" class="guide-line" />
+      <line x1="55" y1="60" [attr.x2]="chartWidth - 20" y2="60" class="guide-line" />
+      <text x="10" y="43" class="axis-tick">OK</text>
+      <text x="10" y="63" class="axis-tick">DEFECT</text>
+      <polyline [attr.points]="statusPolyline" class="status-line" />
+      <ng-container *ngFor="let p of points">
+        <circle [attr.cx]="p.x" [attr.cy]="p.statusY" r="6" [ngClass]="p.status === 'DEFECT' ? 'dot-defect' : 'dot-ok'">
+          <title>{{ p.date }} - {{ p.status }} {{ p.defectType }}</title>
+        </circle>
+      </ng-container>
+
+      
+      <text x="10" y="85" class="axis-label">{{ 'panelHistory.cumulativeRepairCost' | translate }}</text>
+      <line x1="55" y1="100" x2="55" y2="300" class="axis-line" />
+      <line x1="55" y1="300" [attr.x2]="chartWidth - 20" y2="300" class="axis-line" />
+      <text x="10" y="304" class="axis-tick">{{ 0 | cost:currency }}</text>
+      <text x="10" y="104" class="axis-tick">{{ maxCumulativeCost | cost:currency }}</text>
+
+      <polygon
+        [attr.points]="'55,300 ' + costPolyline + ' ' + (chartWidth - 20) + ',300'"
+        class="cost-area"
+      />
+      <polyline [attr.points]="costPolyline" class="cost-line" />
+      <ng-container *ngFor="let p of points">
+        <circle [attr.cx]="p.x" [attr.cy]="p.costY" r="4" class="dot-cost">
+          <title>{{ p.date }} - cumulative: {{ p.cumulativeCost | cost:currency }}</title>
+        </circle>
+        <text [attr.x]="p.x" y="325" class="axis-tick date-label" text-anchor="middle">{{ p.date }}</text>
+      </ng-container>
+    </svg>
+  </div>
+</div>

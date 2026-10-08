@@ -1,0 +1,34 @@
+<h3>{{ 'auditLog.title' | translate }}</h3>
+<p>{{ 'auditLog.subtitle' | translate }}</p>
+
+<div *ngIf="isLoading">
+  <span class="spinner spinner-md">{{ 'common.loading' | translate }}</span>
+</div>
+
+<div class="alert alert-danger" role="alert" *ngIf="accessDenied">
+  <div class="alert-items">
+    <div class="alert-item static">
+      <span class="alert-text">{{ 'auditLog.noPermission' | translate }}</span>
+    </div>
+  </div>
+</div>
+
+<clr-datagrid *ngIf="!isLoading && !accessDenied">
+  <clr-dg-column>{{ 'auditLog.timestamp' | translate }}</clr-dg-column>
+  <clr-dg-column>{{ 'auditLog.user' | translate }}</clr-dg-column>
+  <clr-dg-column>{{ 'auditLog.action' | translate }}</clr-dg-column>
+  <clr-dg-column>{{ 'auditLog.details' | translate }}</clr-dg-column>
+
+  <clr-dg-row *ngFor="let log of logs">
+    <clr-dg-cell>{{ log.timestamp | date:'dd MMM yyyy, HH:mm:ss' }}</clr-dg-cell>
+    <clr-dg-cell>{{ log.username }}</clr-dg-cell>
+    <clr-dg-cell>{{ log.action }}</clr-dg-cell>
+    <clr-dg-cell>{{ log.details }}</clr-dg-cell>
+  </clr-dg-row>
+
+  <clr-dg-footer>
+    {{ totalElements }} {{ 'auditLog.entriesTotal' | translate }} &nbsp;|&nbsp; {{ 'auditLog.page' | translate }} {{ currentPage + 1 }} {{ 'auditLog.of' | translate }} {{ totalPages }}
+    <button class="btn btn-sm btn-outline" [disabled]="currentPage === 0" (click)="previousPage()">{{ 'auditLog.previous' | translate }}</button>
+    <button class="btn btn-sm btn-outline" [disabled]="currentPage + 1 >= totalPages" (click)="nextPage()">{{ 'auditLog.next' | translate }}</button>
+  </clr-dg-footer>
+</clr-datagrid>

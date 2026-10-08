@@ -1,0 +1,228 @@
+<div class="page-container">
+  <h2>{{ 'farmManagement.title' | translate }}</h2>
+
+  <div class="alert" [ngClass]="isError ? 'alert-danger' : 'alert-success'" role="alert" *ngIf="message">
+    <div class="alert-items">
+      <div class="alert-item static">
+        <span class="alert-text">{{ message }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="farms-layout">
+    <div class="farms-list">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>{{ 'farmManagement.name' | translate }}</th>
+            <th>{{ 'farmManagement.location' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of farms" (click)="selectFarm(f)" [class.selected-row]="f.id === selectedFarmId">
+            <td>{{ f.id }}</td>
+            <td>{{ f.name }}</td>
+            <td>{{ f.location || '-' }}</td>
+          </tr>
+          <tr *ngIf="farms.length === 0">
+            <td colspan="3">{{ 'farmManagement.noFarmsYet' | translate }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="card new-farm-card">
+        <div class="card-block">
+          <div class="card-title">{{ 'farmManagement.newFarm' | translate }}</div>
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.name' | translate }}</label>
+            <div class="clr-control-container">
+              <input type="text" class="clr-input" [(ngModel)]="newName" name="newName" />
+            </div>
+          </div>
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.location' | translate }}</label>
+            <div class="clr-control-container">
+              <input type="text" class="clr-input" [(ngModel)]="newLocation" name="newLocation" />
+            </div>
+          </div>
+          <button class="btn btn-primary" (click)="createFarm()">{{ 'farmManagement.createFarm' | translate }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="farm-users" *ngIf="selectedFarmId">
+      <div class="card">
+        <div class="card-block">
+          <div class="card-title">{{ 'farmManagement.pricingSettings' | translate }}</div>
+          <p style="font-size: 0.8rem; color: #666;">{{ 'farmManagement.pricingHelpText' | translate }}</p>
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.currency' | translate }}</label>
+            <div class="clr-control-container">
+              <select class="clr-select" [(ngModel)]="currency" name="currency">
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="RON">RON (lei)</option>
+              </select>
+            </div>
+          </div>
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.laborRatePerHour' | translate }}</label>
+            <div class="clr-control-container">
+              <input type="number" class="clr-input" [(ngModel)]="laborRatePerHour" name="laborRatePerHour" placeholder="100" />
+            </div>
+            <div class="clr-subtext">{{ 'farmManagement.laborRateHelpText' | translate }}</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-sm btn-primary" [disabled]="savingPricing" (click)="savePricing()">
+            {{ (savingPricing ? 'common.saving' : 'farmManagement.savePricing') | translate }}
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-block">
+          <div class="card-title">{{ 'farmManagement.panelDefaults' | translate }}</div>
+          <p style="font-size: 0.8rem; color: #666;">{{ 'farmManagement.panelDefaultsHelpText' | translate }}</p>
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.defaultWattage' | translate }}</label>
+            <div class="clr-control-container">
+              <input type="number" class="clr-input" [(ngModel)]="defaultsWattage" name="defaultsWattage" placeholder="400" />
+            </div>
+          </div>
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.defaultTier' | translate }}</label>
+            <div class="clr-control-container">
+              <select class="clr-select" [(ngModel)]="defaultsTier" name="defaultsTier">
+                <option value="BUDGET">{{ 'farmMap.tierBudget' | translate }}</option>
+                <option value="STANDARD">{{ 'farmMap.tierStandard' | translate }}</option>
+                <option value="PREMIUM">{{ 'farmMap.tierPremium' | translate }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-sm btn-primary" [disabled]="savingDefaults" (click)="saveDefaults()">
+            {{ (savingDefaults ? 'common.saving' : 'farmManagement.saveDefaults') | translate }}
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-block">
+          <div class="card-title">{{ 'farmManagement.criticalAlertSettings' | translate }}</div>
+          <p style="font-size: 0.8rem; color: #666;">{{ 'farmManagement.criticalAlertHelpText' | translate }}</p>
+
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.minimumConfidence' | translate }} {{ criticalThreshold | number:'1.0-2' }}</label>
+            <div class="clr-control-container">
+              <input type="range" min="0" max="1" step="0.05" [(ngModel)]="criticalThreshold" name="criticalThreshold" style="width: 100%;" />
+            </div>
+          </div>
+
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.criticalDefectTypes' | translate }}</label>
+            <div class="clr-control-container critical-types-grid">
+              <label class="clr-checkbox-wrapper" *ngFor="let t of defectTypes">
+                <input type="checkbox" class="clr-checkbox" [checked]="criticalTypes.has(t)" (change)="toggleCriticalType(t)" />
+                <span class="clr-control-label">{{ t }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.slackWebhookUrl' | translate }}</label>
+            <div class="clr-control-container">
+              <input type="text" class="clr-input" [(ngModel)]="webhookUrl" name="webhookUrl"
+                     placeholder="https://hooks.slack.com/services/..." />
+            </div>
+            <div class="clr-subtext">{{ 'farmManagement.webhookHelpText' | translate }}</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-sm btn-outline" [disabled]="!webhookUrl || testingWebhook" (click)="testWebhook()">
+            {{ (testingWebhook ? 'farmManagement.sending' : 'farmManagement.sendTestAlert') | translate }}
+          </button>
+          <button class="btn btn-sm btn-primary" [disabled]="savingNotificationSettings" (click)="saveNotificationSettings()">
+            {{ (savingNotificationSettings ? 'common.saving' : 'farmManagement.saveAlertSettings') | translate }}
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-block">
+          <div class="card-title">{{ 'farmManagement.reportBranding' | translate }}</div>
+          <p style="font-size: 0.8rem; color: #666;">{{ 'farmManagement.reportBrandingHelpText' | translate }}</p>
+
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.companyName' | translate }}</label>
+            <div class="clr-control-container">
+              <input type="text" class="clr-input" [(ngModel)]="reportCompanyName" name="reportCompanyName"
+                     [placeholder]="'farmManagement.companyNamePlaceholder' | translate" />
+            </div>
+            <div class="clr-subtext">{{ 'farmManagement.companyNameHelpText' | translate }}</div>
+          </div>
+
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.accentColor' | translate }}</label>
+            <div class="clr-control-container branding-color-row">
+              <input type="color" class="branding-color-swatch" [(ngModel)]="reportAccentColor" name="reportAccentColor" />
+              <input type="text" class="clr-input" [(ngModel)]="reportAccentColor" name="reportAccentColorHex" placeholder="#111c2d" style="max-width: 120px;" />
+            </div>
+          </div>
+
+          <div class="clr-form-control">
+            <label class="clr-control-label">{{ 'farmManagement.logo' | translate }}</label>
+            <div class="clr-control-container branding-logo-row">
+              <img *ngIf="logoPreviewUrl" [src]="logoPreviewUrl" alt="Logo" class="branding-logo-preview" />
+              <span *ngIf="!logoPreviewUrl" class="clr-subtext">{{ 'farmManagement.noLogoUploaded' | translate }}</span>
+            </div>
+            <div class="clr-control-container branding-logo-row" style="margin-top: 0.5rem;">
+              <input type="file" class="file-input" accept="image/*" (change)="onLogoSelected($event)" />
+              <button class="btn btn-sm btn-outline" [disabled]="!selectedLogoFile || uploadingLogo" (click)="uploadLogo()">
+                {{ (uploadingLogo ? 'farmManagement.uploading' : 'farmManagement.uploadLogo') | translate }}
+              </button>
+              <button class="btn btn-sm btn-outline" *ngIf="hasReportLogo" (click)="removeLogo()">
+                {{ 'farmManagement.removeLogo' | translate }}
+              </button>
+            </div>
+            <div class="clr-subtext">{{ 'farmManagement.logoHelpText' | translate }}</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-sm btn-primary" [disabled]="savingBranding" (click)="saveBranding()">
+            {{ (savingBranding ? 'common.saving' : 'farmManagement.saveBranding') | translate }}
+          </button>
+        </div>
+      </div>
+
+      <h4>{{ 'farmManagement.usersAssigned' | translate }}</h4>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ 'common.username' | translate }}</th>
+            <th>{{ 'common.role' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of farmUsers">
+            <td>{{ u.username }}</td>
+            <td>{{ u.role }}</td>
+            <td><button class="btn btn-sm btn-outline" (click)="unassignUser(u.username)">{{ 'common.remove' | translate }}</button></td>
+          </tr>
+          <tr *ngIf="farmUsers.length === 0">
+            <td colspan="3">{{ 'farmManagement.noUsersAssignedYet' | translate }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="assign-row">
+        <input type="text" class="clr-input" [placeholder]="'common.username' | translate" [(ngModel)]="assignUsername" name="assignUsername" />
+        <button class="btn btn-sm btn-primary" (click)="assignUser()">{{ 'farmManagement.assignUser' | translate }}</button>
+      </div>
+    </div>
+  </div>
+</div>

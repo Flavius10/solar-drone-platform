@@ -1,0 +1,74 @@
+<div class="login-wrapper">
+  <div class="login-brand">
+    <svg width="44" height="44" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id="login-icon-clip"><rect width="100" height="100" rx="16"/></clipPath>
+        <linearGradient id="login-icon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff2d78"/>
+          <stop offset="100%" stop-color="#b026ff"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="16" fill="#0b0710" stroke="#2a1830" stroke-width="0.6"/>
+      <g clip-path="url(#login-icon-clip)">
+        <circle cx="50" cy="50" r="34" fill="none" stroke="url(#login-icon-grad)" stroke-width="4"/>
+        <circle cx="50" cy="50" r="3.5" fill="url(#login-icon-grad)"/>
+        <path d="M50 50 L50 12 A38 38 0 0 1 84 34 Z" fill="url(#login-icon-grad)" opacity="0.55"/>
+        <line x1="50" y1="8" x2="50" y2="18" stroke="url(#login-icon-grad)" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="76" cy="30" r="3" fill="#ff5ca8"/>
+      </g>
+    </svg>
+    <span class="login-brand-name">axela</span>
+    <span class="login-brand-tagline">ENTERPRISE INSPECTION SUITE</span>
+  </div>
+  <div class="card login-card">
+    <div class="card-block">
+      <div class="card-title">{{ 'login.title' | translate }}</div>
+      <div class="card-text">
+        <form (ngSubmit)="onLogin()">
+          <div class="clr-form-control">
+            <label for="username" class="clr-control-label">{{ 'common.username' | translate }}</label>
+            <div class="clr-control-container">
+              <input
+                type="text"
+                id="username"
+                name="username"
+                class="clr-input"
+                [(ngModel)]="username"
+                autocomplete="username"
+              />
+            </div>
+          </div>
+
+          <div class="clr-form-control">
+            <label for="password" class="clr-control-label">{{ 'login.passwordLabel' | translate }}</label>
+            <div class="clr-control-container">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="clr-input"
+                [(ngModel)]="password"
+                autocomplete="current-password"
+              />
+            </div>
+          </div>
+
+          <div class="alert alert-danger" role="alert" *ngIf="errorMessage">
+            <div class="alert-items">
+              <div class="alert-item static">
+                <span class="alert-text">{{ errorMessage }}</span>
+              </div>
+            </div>
+          </div>
+        </form>
+        <a routerLink="/forgot-password" class="forgot-password-link">{{ 'login.forgotPassword' | translate }}</a>
+      </div>
+    </div>
+    <div class="card-footer">
+      <button class="btn btn-primary" [disabled]="isLoading" (click)="onLogin()">
+        {{ (isLoading ? 'login.signingIn' : 'login.signIn') | translate }}
+      </button>
+    </div>
+  </div>
+  <p class="login-footer-version">{{ 'login.footerVersion' | translate }}</p>
+</div>

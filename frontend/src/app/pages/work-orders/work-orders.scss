@@ -1,0 +1,23 @@
+.page-container {
+  display: block;
+  padding: 1.5rem;
+}
+
+.card {
+  max-width: 480px;
+  margin-bottom: 1.5rem;
+}
+
+.action-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.assignee-input {
+  width: 120px;
+}
+
+.status-select {
+  width: 140px;
+}

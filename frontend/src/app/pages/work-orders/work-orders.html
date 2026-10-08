@@ -1,0 +1,134 @@
+<div class="page-container">
+  <h2>{{ 'workOrders.title' | translate }}</h2>
+
+  <div class="alert" [ngClass]="isError ? 'alert-danger' : 'alert-success'" role="alert" *ngIf="message">
+    <div class="alert-items">
+      <div class="alert-item static">
+        <span class="alert-text">{{ message }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-block">
+      <div class="card-title">{{ 'workOrders.newWorkOrder' | translate }}</div>
+      <div class="clr-form-control" *ngIf="!currentFarmId">
+        <span class="alert alert-warning" role="alert">
+          <div class="alert-items">
+            <div class="alert-item static">
+              <span class="alert-text">{{ 'workOrders.selectFarmToChoosePanel' | translate }}</span>
+            </div>
+          </div>
+        </span>
+      </div>
+      <div class="clr-form-control">
+        <label class="clr-control-label">{{ 'dashboard.panel' | translate }}</label>
+        <div class="clr-control-container">
+          <select class="clr-select" [(ngModel)]="newPanelId" name="newPanelId" [disabled]="!currentFarmId || panels.length === 0">
+            <option [ngValue]="null">{{ 'workOrders.selectPanel' | translate }}</option>
+            <option *ngFor="let p of panels" [ngValue]="p.id">
+              ({{ p.rowNumber }}, {{ p.columnNumber }}){{ p.label ? ' - ' + p.label : '' }}
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="clr-form-control">
+        <label class="clr-control-label">{{ 'workOrders.workOrderTitle' | translate }}</label>
+        <div class="clr-control-container">
+          <input type="text" class="clr-input" [(ngModel)]="newTitle" name="newTitle" />
+        </div>
+      </div>
+      <div class="clr-form-control">
+        <label class="clr-control-label">{{ 'workOrders.description' | translate }}</label>
+        <div class="clr-control-container">
+          <textarea class="clr-textarea" [(ngModel)]="newDescription" name="newDescription"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-primary" (click)="createWorkOrder()">{{ 'workOrders.createTicket' | translate }}</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-block filter-bar">
+      <div class="clr-form-control filter-search">
+        <div class="clr-control-container">
+          <input
+            type="text"
+            class="clr-input"
+            [placeholder]="'workOrders.filterPlaceholder' | translate"
+            [(ngModel)]="searchQuery"
+            name="searchQuery"
+          />
+        </div>
+      </div>
+      <div class="clr-form-control">
+        <div class="clr-control-container">
+          <select class="clr-select" [(ngModel)]="statusFilter" name="statusFilter">
+            <option value="ALL">{{ 'workOrders.allStatuses' | translate }}</option>
+            <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [class.btn-primary]="onlyAssignedToMe"
+        [class.btn-outline]="!onlyAssignedToMe"
+        (click)="toggleOnlyAssignedToMe()"
+      >
+        {{ 'workOrders.onlyAssignedToMe' | translate }}
+      </button>
+      <button type="button" class="btn btn-sm btn-link" (click)="clearFilters()">
+        {{ 'workOrders.clearFilters' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <clr-datagrid>
+    <clr-dg-column [clrDgField]="'id'">ID</clr-dg-column>
+    <clr-dg-column [clrDgField]="'farmName'">{{ 'workOrders.farm' | translate }}</clr-dg-column>
+    <clr-dg-column>{{ 'dashboard.panel' | translate }}</clr-dg-column>
+    <clr-dg-column [clrDgField]="'title'">{{ 'workOrders.workOrderTitle' | translate }}</clr-dg-column>
+    <clr-dg-column [clrDgField]="'status'">{{ 'common.status' | translate }}</clr-dg-column>
+    <clr-dg-column [clrDgField]="'createdBy'">{{ 'workOrders.createdBy' | translate }}</clr-dg-column>
+    <clr-dg-column [clrDgField]="'assignedTo'">{{ 'workOrders.assignedTo' | translate }}</clr-dg-column>
+    <clr-dg-column *ngIf="canManage()">{{ 'common.actions' | translate }}</clr-dg-column>
+
+    <clr-dg-row *clrDgItems="let wo of filteredWorkOrders">
+      <clr-dg-cell class="id-cell">WO-{{ wo.id }}</clr-dg-cell>
+      <clr-dg-cell>{{ wo.farmName || '-' }}</clr-dg-cell>
+      <clr-dg-cell class="mono-cell">({{ wo.panelRow }}, {{ wo.panelColumn }})</clr-dg-cell>
+      <clr-dg-cell>{{ wo.title }}</clr-dg-cell>
+      <clr-dg-cell><span class="label" [ngClass]="'status-' + (wo.status | lowercase)">{{ wo.status }}</span></clr-dg-cell>
+      <clr-dg-cell class="mono-cell">{{ wo.createdBy }}</clr-dg-cell>
+      <clr-dg-cell class="mono-cell">{{ wo.assignedTo || '-' }}</clr-dg-cell>
+      <clr-dg-cell *ngIf="canManage()">
+        <div class="action-row">
+          <input
+            type="text"
+            class="clr-input assignee-input"
+            [placeholder]="'common.username' | translate"
+            [(ngModel)]="assigneeByOrderId[wo.id]"
+            name="assignee-{{wo.id}}"
+          />
+          <button class="btn btn-sm" (click)="assign(wo)">{{ 'workOrders.assign' | translate }}</button>
+
+          <select
+            class="clr-select status-select"
+            [ngModel]="wo.status"
+            (ngModelChange)="updateStatus(wo, $event)"
+            name="status-{{wo.id}}"
+          >
+            <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+      </clr-dg-cell>
+    </clr-dg-row>
+
+    <clr-dg-footer>
+      <ng-container *ngIf="!isLoading && workOrders.length === 0">{{ 'workOrders.noWorkOrdersYet' | translate }}</ng-container>
+      <ng-container *ngIf="!isLoading && workOrders.length > 0 && filteredWorkOrders.length === 0">{{ 'workOrders.noMatchingWorkOrders' | translate }}</ng-container>
+      <ng-container *ngIf="!isLoading && workOrders.length > 0 && filteredWorkOrders.length > 0">{{ filteredWorkOrders.length }} / {{ workOrders.length }} {{ 'reports.rowsShown' | translate }}</ng-container>
+    </clr-dg-footer>
+  </clr-datagrid>
+</div>

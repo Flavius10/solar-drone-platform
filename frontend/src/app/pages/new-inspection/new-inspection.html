@@ -1,0 +1,49 @@
+<h3>{{ 'newInspection.title' | translate }}</h3>
+<p>{{ 'newInspection.subtitle' | translate }}</p>
+
+<div class="card" style="margin-top: 20px; max-width: 600px;">
+    <div class="card-block">
+        <div class="card-title">{{ 'newInspection.uploadDroneImage' | translate }}</div>
+        <div class="card-text">
+            <form>
+                <div class="clr-form-control">
+                    <label for="panel-select" class="clr-control-label">{{ 'newInspection.selectPanel' | translate }}</label>
+                    <div class="clr-control-container">
+                        <select id="panel-select" class="clr-select" [(ngModel)]="selectedPanelId" name="panelId">
+                            <option [ngValue]="null" disabled>{{ 'newInspection.choosePanel' | translate }}</option>
+                            <option *ngFor="let panel of panels" [ngValue]="panel.id">
+                                {{ 'newInspection.rowColumn' | translate }} {{ panel.rowNumber }}, {{ 'farmMap.column' | translate }} {{ panel.columnNumber }}{{ panel.label ? ' - ' + panel.label : '' }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="clr-form-control">
+                    <label class="clr-control-label">{{ 'newInspection.inspectionType' | translate }}</label>
+                    <div class="clr-control-container">
+                        <select class="clr-select" [(ngModel)]="selectedInspectionType" name="inspectionType">
+                            <option value="RGB">{{ 'newInspection.rgbVisual' | translate }}</option>
+                            <option value="THERMAL" [disabled]="!canUseThermal">{{ 'newInspection.thermalRequiresPro' | translate }}</option>
+                        </select>
+                    </div>
+                    <div class="clr-control-container" *ngIf="!canUseThermal">
+                        <span class="clr-subtext">{{ 'newInspection.upgradeToUnlockThermal' | translate }}</span>
+                    </div>
+                </div>
+
+                <div class="clr-form-control">
+                    <label for="file-upload" class="clr-control-label">{{ 'newInspection.selectFile' | translate }}</label>
+                    <div class="clr-control-container">
+                        <div class="clr-file-wrapper">
+                            <input type="file" id="file-upload" class="file-input" accept="image/png, image/jpeg" (change)="onFileSelected($event)"/>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card-footer">
+        <button class="btn btn-primary" (click)="onScan()">{{ 'newInspection.scanForDefects' | translate }}</button>
+        <button class="btn btn-outline">{{ 'common.cancel' | translate }}</button>
+    </div>
+</div>

@@ -1,0 +1,227 @@
+<h3>{{ 'farmMap.title' | translate }}</h3>
+<p>{{ 'farmMap.subtitle' | translate }}</p>
+
+<div class="alert alert-danger" role="alert" *ngIf="loadError">
+  <div class="alert-items">
+    <div class="alert-item static">
+      <span class="alert-text">{{ loadError }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-warning" role="alert" *ngIf="!currentFarmId">
+  <div class="alert-items">
+    <div class="alert-item static">
+      <span class="alert-text">{{ 'farmMap.noFarmSelected' | translate }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 20px; max-width: 500px;" *ngIf="isAdmin">
+  <div class="card-block">
+    <div class="card-title">{{ 'farmMap.addPanel' | translate }}</div>
+    <div class="card-text">
+      <form>
+        <div class="clr-form-control">
+          <label class="clr-control-label">{{ 'farmMap.row' | translate }}</label>
+          <div class="clr-control-container">
+            <input type="number" class="clr-input" [(ngModel)]="newRow" name="newRow" />
+          </div>
+        </div>
+        <div class="clr-form-control">
+          <label class="clr-control-label">{{ 'farmMap.column' | translate }}</label>
+          <div class="clr-control-container">
+            <input type="number" class="clr-input" [(ngModel)]="newColumn" name="newColumn" />
+          </div>
+        </div>
+        <div class="clr-form-control">
+          <label class="clr-control-label">{{ 'farmMap.labelOptional' | translate }}</label>
+          <div class="clr-control-container">
+            <input type="text" class="clr-input" [(ngModel)]="newLabel" name="newLabel" />
+          </div>
+        </div>
+        <div class="clr-form-control">
+          <label class="clr-control-label">{{ 'farmMap.wattageOptional' | translate }}</label>
+          <div class="clr-control-container">
+            <input type="number" class="clr-input" [(ngModel)]="newWattage" name="newWattage" [placeholder]="'farmMap.inheritsFarmDefault' | translate" />
+          </div>
+        </div>
+        <div class="clr-form-control">
+          <label class="clr-control-label">{{ 'farmMap.panelTierOptional' | translate }}</label>
+          <div class="clr-control-container">
+            <select class="clr-select" [(ngModel)]="newTier" name="newTier">
+              <option value="">{{ 'farmMap.inheritFromFarm' | translate }}</option>
+              <option value="BUDGET">{{ 'farmMap.tierBudget' | translate }}</option>
+              <option value="STANDARD">{{ 'farmMap.tierStandard' | translate }}</option>
+              <option value="PREMIUM">{{ 'farmMap.tierPremium' | translate }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="alert alert-danger" role="alert" *ngIf="createError">
+          <div class="alert-items">
+            <div class="alert-item static">
+              <span class="alert-text">{{ createError }}</span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="card-footer">
+    <button class="btn btn-primary" [disabled]="isCreating" (click)="onCreatePanel()">
+      {{ (isCreating ? 'farmMap.adding' : 'farmMap.addPanel') | translate }}
+    </button>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 20px; max-width: 500px;" *ngIf="isAdmin">
+  <div class="card-block">
+    <div class="card-title">{{ 'farmMap.bulkImportPanels' | translate }}</div>
+    <div class="card-text">
+      <p class="csv-format-hint">{{ 'farmMap.csvFormatHint' | translate }}</p>
+      <input type="file" class="file-input" accept=".csv" (change)="onCsvSelected($event)" />
+
+      <div class="alert alert-success" role="alert" *ngIf="importResult">
+        <div class="alert-items">
+          <div class="alert-item static">
+           <span class="alert-text">
+              {{ 'farmMap.created' | translate }} {{ importResult.created }}, {{ 'farmMap.skippedDuplicates' | translate }} {{ importResult.skipped }}.
+              <br *ngIf="importResult.errors.length > 0" />
+              <span *ngIf="importResult.errors.length > 0">{{ importResult.errors.length }} {{ 'farmMap.errorsLabel' | translate }}: {{ importResult.errors.join('; ') }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer">
+    <button class="btn btn-primary" [disabled]="isImporting" (click)="onBulkImport()">
+      {{ (isImporting ? 'farmMap.importing' : 'farmMap.importCsv') | translate }}
+    </button>
+  </div>
+</div>
+
+<div *ngIf="isLoading">
+  <span class="spinner spinner-md">{{ 'common.loading' | translate }}</span>
+</div>
+
+<div *ngIf="!isLoading && panels.length === 0">
+  <p>{{ 'farmMap.noPanelsYet' | translate }}</p>
+</div>
+
+<div class="grid-legend" *ngIf="!isLoading && panels.length > 0">
+  <span class="legend-item"><span class="legend-swatch" style="background:#10b981"></span> {{ 'farmMap.statusOk' | translate }}</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:#ef4444"></span> {{ 'farmMap.statusDefect' | translate }}</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:#f59e0b"></span> {{ 'farmMap.statusProcessing' | translate }}</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:#6b7280"></span> {{ 'farmMap.statusNoData' | translate }}</span>
+</div>
+
+<div *ngIf="!isLoading && panels.length > 0" class="farm-map-layout">
+  <div class="grid-wrapper">
+    <div
+      class="grid-container"
+      [style.grid-template-columns]="'32px repeat(' + columns.length + ', 32px)'"
+      [style.grid-template-rows]="'repeat(' + rows.length + ', 32px) 32px'"
+    >
+      <ng-container *ngFor="let row of rows; let ri = index">
+        <span class="grid-row-label" [style.grid-row]="'' + (ri + 1)" [style.grid-column]="'1'">{{ row }}</span>
+        <div
+          *ngFor="let col of columns; let ci = index"
+          class="grid-cell"
+          [style.grid-row]="'' + (ri + 1)"
+          [style.grid-column]="'' + (ci + 2)"
+          [style.background-color]="getStatusColor(getPanelAt(row, col))"
+          [title]="'R' + row + '-C' + col"
+          (click)="selectPanel(getPanelAt(row, col))"
+        ></div>
+      </ng-container>
+      <span
+        class="grid-col-label"
+        *ngFor="let col of columns; let ci = index"
+        [style.grid-row]="'' + (rows.length + 1)"
+        [style.grid-column]="'' + (ci + 2)"
+      >{{ col }}</span>
+    </div>
+  </div>
+
+  <div class="panel-detail-col">
+    <div class="card" *ngIf="selectedPanel">
+      <div class="card-block">
+        <div class="card-title">{{ 'farmMap.panelDetail' | translate }}</div>
+        <div class="detail-field">
+          <div class="detail-label">{{ 'farmMap.panelId' | translate }}</div>
+          <div class="detail-value id-cell">R{{ selectedPanel.rowNumber }}-C{{ selectedPanel.columnNumber }}</div>
+        </div>
+        <div class="detail-field" *ngIf="selectedPanel.label">
+          <div class="detail-label">{{ 'farmMap.labelOptional2' | translate }}</div>
+          <div class="detail-value">{{ selectedPanel.label }}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">{{ 'common.status' | translate }}</div>
+          <span class="label" [ngClass]="'status-' + (selectedPanel.latestStatus | lowercase)">{{ selectedPanel.latestStatus }}</span>
+        </div>
+        <div class="detail-field" *ngIf="selectedPanel.latestDefectType">
+          <div class="detail-label">{{ 'farmMap.defectType' | translate }}</div>
+          <div class="detail-value">{{ selectedPanel.latestDefectType }}</div>
+        </div>
+        <div class="detail-field" *ngIf="selectedPanel.latestConfidenceScore">
+          <div class="detail-label">{{ 'farmMap.confidence' | translate }}</div>
+          <div class="detail-value mono-cell">{{ selectedPanel.latestConfidenceScore }}</div>
+        </div>
+        <div class="detail-field" *ngIf="selectedPanel.latestEstimatedRepairCost">
+          <div class="detail-label">{{ 'farmMap.estRepairCost' | translate }}</div>
+          <div class="detail-value mono-cell">{{ selectedPanel.latestEstimatedRepairCost | cost:selectedPanel.latestCostCurrency }}</div>
+        </div>
+        <div class="detail-field" *ngIf="selectedPanel.lastInspectionDate">
+          <div class="detail-label">{{ 'farmMap.lastInspection' | translate }}</div>
+          <div class="detail-value mono-cell">{{ selectedPanel.lastInspectionDate }}</div>
+        </div>
+
+        <div class="detail-field" *ngIf="!isEditingSpecs">
+          <div class="detail-label">{{ 'farmMap.panelSpec' | translate }}</div>
+          <div class="detail-value mono-cell">
+            {{ selectedPanel.effectiveWattage }}W {{ selectedPanel.effectiveTier }}
+            <span *ngIf="!selectedPanel.wattage && !selectedPanel.tier" style="color: var(--text-tertiary); font-weight: 400;">({{ 'farmMap.inherited' | translate }})</span>
+          </div>
+          <button *ngIf="isAdmin" class="btn btn-sm btn-link" style="padding: 0.2rem 0;" (click)="startEditSpecs()">{{ 'common.edit' | translate }}</button>
+        </div>
+
+        <div class="detail-field" *ngIf="isEditingSpecs">
+          <div class="detail-label">{{ 'farmMap.panelSpecOverride' | translate }}</div>
+          <div class="clr-form-control">
+            <input type="number" class="clr-input" [(ngModel)]="editWattage" name="editWattage" [placeholder]="'farmMap.inheritFromFarmLower' | translate" />
+          </div>
+          <div class="clr-form-control" style="margin-top: 0.4rem;">
+            <select class="clr-select" [(ngModel)]="editTier" name="editTier">
+              <option value="">{{ 'farmMap.inheritFromFarm' | translate }}</option>
+              <option value="BUDGET">{{ 'farmMap.tierBudget' | translate }}</option>
+              <option value="STANDARD">{{ 'farmMap.tierStandard' | translate }}</option>
+              <option value="PREMIUM">{{ 'farmMap.tierPremium' | translate }}</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <button class="btn btn-sm btn-primary" [disabled]="isSavingSpecs" (click)="saveSpecs()">
+              {{ (isSavingSpecs ? 'common.saving' : 'common.save') | translate }}
+            </button>
+            <button class="btn btn-sm btn-outline" (click)="cancelEditSpecs()">{{ 'common.cancel' | translate }}</button>
+          </div>
+        </div>
+
+        <div class="panel-actions">
+          <a class="btn btn-sm btn-outline" [routerLink]="['/work-orders']" [queryParams]="{ panelId: selectedPanel.panelId }">
+            {{ 'farmMap.openRepairTicket' | translate }}
+          </a>
+          <a class="btn btn-sm btn-outline" [routerLink]="['/panel-history']" [queryParams]="{ panelId: selectedPanel.panelId }">
+            {{ 'farmMap.viewDegradationHistory' | translate }}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card panel-detail-empty" *ngIf="!selectedPanel">
+      <div class="card-block">
+        <p>{{ 'farmMap.clickPanelToView' | translate }}</p>
+      </div>
+    </div>
+  </div>
+</div>

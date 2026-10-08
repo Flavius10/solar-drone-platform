@@ -1,0 +1,27 @@
+<div class="page-container">
+  <h2>{{ 'profile.title' | translate }}</h2>
+
+  <p><strong>{{ 'common.username' | translate }}:</strong> {{ authService.getUsername() }}</p>
+  <p><strong>{{ 'common.role' | translate }}:</strong> {{ authService.getRole() }}</p>
+
+  <form (ngSubmit)="onSubmit()" class="clr-form">
+    <div class="clr-form-control">
+      <label for="email" class="clr-control-label">{{ 'profile.emailLabel' | translate }}</label>
+      <div class="clr-control-container">
+        <input type="email" id="email" name="email" class="clr-input" [(ngModel)]="email" autocomplete="email" />
+      </div>
+    </div>
+
+    <div class="alert" [ngClass]="isError ? 'alert-danger' : 'alert-success'" role="alert" *ngIf="message">
+      <div class="alert-items">
+        <div class="alert-item static">
+          <span class="alert-text">{{ message }}</span>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+      {{ (isLoading ? 'common.saving' : 'profile.saveEmail') | translate }}
+    </button>
+  </form>
+</div>

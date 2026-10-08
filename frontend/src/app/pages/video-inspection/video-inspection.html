@@ -1,0 +1,143 @@
+<div class="page-container">
+  <h2>{{ 'videoInspection.title' | translate }}</h2>
+  <p>{{ 'videoInspection.subtitle' | translate }}</p>
+
+  <div class="alert" [ngClass]="isError ? 'alert-danger' : 'alert-success'" role="alert" *ngIf="message">
+    <div class="alert-items">
+      <div class="alert-item static">
+        <span class="alert-text">{{ message }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-block">
+      <div class="card-title">{{ 'videoInspection.uploadNewVideo' | translate }}</div>
+
+      <div class="clr-form-control" *ngIf="!currentFarmId">
+        <span class="alert alert-warning" role="alert">
+          <div class="alert-items">
+            <div class="alert-item static">
+              <span class="alert-text">{{ 'videoInspection.selectFarmFirst' | translate }}</span>
+            </div>
+          </div>
+        </span>
+      </div>
+
+      <div class="clr-form-control" *ngIf="currentFarmId">
+        <label class="clr-control-label">{{ 'videoInspection.farm' | translate }}</label>
+        <div class="clr-control-container">
+          <span class="farm-name">{{ currentFarmName }}</span>
+        </div>
+        <div class="clr-control-container">
+          <span class="clr-subtext">{{ 'videoInspection.framesDistributedHint' | translate }}</span>
+        </div>
+      </div>
+
+      <div class="clr-form-control">
+        <label class="clr-control-label">{{ 'newInspection.inspectionType' | translate }}</label>
+        <div class="clr-control-container">
+          <select class="clr-select" [(ngModel)]="selectedInspectionType" name="inspectionType">
+            <option value="RGB">{{ 'newInspection.rgbVisual' | translate }}</option>
+            <option value="THERMAL" [disabled]="!canUseThermal">{{ 'videoInspection.thermalRequiresPro' | translate }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="clr-form-control">
+        <label class="clr-control-label">{{ 'videoInspection.videoFile' | translate }}</label>
+        <div class="clr-control-container">
+          <div class="clr-file-wrapper">
+            <input type="file" class="file-input" accept="video/*" (change)="onFileSelected($event)" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <button class="btn btn-primary" [disabled]="isUploading || !currentFarmId" (click)="upload()">
+        {{ isUploading ? ('videoInspection.uploading' | translate) : ('videoInspection.uploadAndAnalyze' | translate) }}
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-block">
+      <div class="card-title">{{ 'videoInspection.videoBatches' | translate }}</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>{{ 'videoInspection.batchId' | translate }}</th>
+            <th>{{ 'videoInspection.farm' | translate }}</th>
+            <th>{{ 'common.type' | translate }}</th>
+            <th>{{ 'common.status' | translate }}</th>
+            <th>{{ 'videoInspection.progress' | translate }}</th>
+            <th>{{ 'videoInspection.createdBy' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let b of batches">
+            <tr class="clickable-row" (click)="b.status === 'COMPLETE' ? toggleFrames(b) : null">
+              <td class="expand-caret" [class.expanded]="expandedBatchId === b.id">
+                <span *ngIf="b.status === 'COMPLETE'">▶</span>
+              </td>
+              <td class="id-cell">VB-{{ b.id }}</td>
+              <td>{{ b.farmName || '-' }}</td>
+              <td>{{ b.inspectionType }}</td>
+              <td>
+                <span class="label" [ngClass]="{
+                  'label-warning': b.status === 'PENDING' || b.status === 'EXTRACTING' || b.status === 'PROCESSING',
+                  'label-success': b.status === 'COMPLETE',
+                  'label-danger': b.status === 'FAILED'
+                }">{{ b.status }}</span>
+              </td>
+              <td>
+                <ng-container *ngIf="b.totalFrames">
+                  <div class="mono-cell progress-label">{{ b.processedFrames || 0 }} / {{ b.totalFrames }} {{ 'videoInspection.frames' | translate }}</div>
+                  <span class="progress-bar-track"><span class="progress-bar-fill" [style.width.%]="progressPercent(b)"></span></span>
+                </ng-container>
+                <span *ngIf="!b.totalFrames && b.status !== 'FAILED'">-</span>
+                <span *ngIf="b.status === 'FAILED'" class="error-text" [title]="b.errorMessage">{{ b.errorMessage }}</span>
+              </td>
+              <td class="mono-cell">{{ b.createdBy }}</td>
+            </tr>
+            <tr *ngIf="expandedBatchId === b.id">
+              <td colspan="7">
+                <table class="table frames-table">
+                  <thead>
+                    <tr>
+                      <th>{{ 'videoInspection.frameNumber' | translate }}</th>
+                      <th>{{ 'videoInspection.timestamp' | translate }}</th>
+                      <th>{{ 'dashboard.panel' | translate }}</th>
+                      <th>{{ 'common.status' | translate }}</th>
+                      <th>{{ 'dashboard.defectType' | translate }}</th>
+                      <th>{{ 'farmMap.confidence' | translate }}</th>
+                      <th>{{ 'dashboard.estCost' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let f of framesByBatchId[b.id]">
+                      <td class="id-cell">#{{ f.frameIndex }}</td>
+                      <td class="mono-cell">{{ f.frameTimestampSeconds != null ? (f.frameTimestampSeconds | number:'1.1-1') : '-' }}</td>
+                      <td class="id-cell">({{ f.panelRow }}, {{ f.panelColumn }})</td>
+                      <td><span class="label" [ngClass]="'status-' + ((f.status || 'pending') | lowercase)">{{ f.status }}</span></td>
+                      <td>{{ f.defectType || '-' }}</td>
+                      <td class="mono-cell">{{ f.confidenceScore ? (f.confidenceScore * 100 | number:'1.0-0') + '%' : '-' }}</td>
+                      <td class="mono-cell">{{ f.estimatedRepairCost | cost:f.costCurrency }}</td>
+                    </tr>
+                    <tr *ngIf="!framesByBatchId[b.id] || framesByBatchId[b.id].length === 0">
+                      <td colspan="7">{{ 'common.loading' | translate }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </ng-container>
+          <tr *ngIf="!isLoading && batches.length === 0">
+            <td colspan="7">{{ 'videoInspection.noVideosProcessedYet' | translate }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

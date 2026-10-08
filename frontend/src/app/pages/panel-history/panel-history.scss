@@ -1,0 +1,101 @@
+.page-container {
+  display: block;
+  padding: 1.5rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.summary-cards {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  background: var(--navy-card);
+  border: 1px solid var(--navy-card-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  text-align: center;
+  min-width: 140px;
+}
+
+.summary-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.summary-label {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.empty-state {
+  color: var(--text-tertiary);
+  padding: 2rem 0;
+}
+
+.chart-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  background: var(--bg-card);
+}
+
+.axis-label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--text-card-title);
+}
+
+.axis-tick {
+  font-size: 10px;
+  fill: var(--text-tertiary);
+}
+
+.axis-line, .guide-line {
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+}
+
+.status-line {
+  fill: none;
+  stroke: #cbd5e1;
+  stroke-width: 1.5;
+}
+
+.dot-ok {
+  fill: var(--status-green);
+}
+
+.dot-defect {
+  fill: var(--status-red);
+}
+
+.dot-cost {
+  fill: var(--accent-blue);
+}
+
+.cost-line {
+  fill: none;
+  stroke: var(--accent-blue);
+  stroke-width: 2;
+}
+
+.cost-area {
+  fill: rgba(230, 0, 122, 0.1);
+  stroke: none;
+}
+
+.date-label {
+  fill: var(--text-tertiary);
+}
