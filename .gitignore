@@ -19,3 +19,5 @@ backend/uploads/
 uploads/
 
 backend/src/main/resources/application.properties
+
+ai-models-plan.md
